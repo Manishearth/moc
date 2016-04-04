@@ -21,7 +21,8 @@ enum menu_request
 	REQ_PGUP,
 	REQ_PGDOWN,
 	REQ_TOP,
-	REQ_BOTTOM
+	REQ_BOTTOM,
+	REQ_GOTO,
 };
 
 enum menu_align

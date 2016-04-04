@@ -32,6 +32,7 @@
 #include "compat.h"
 #include "options.h"
 #include "menu.h"
+#include "interface.h"
 #include "files.h"
 #include "rbtree.h"
 #include "utf8.h"
@@ -380,14 +381,23 @@ void menu_free (struct menu *menu)
 	free (menu);
 }
 
+extern MEVENT last_mouse_event;
+extern bool last_mouse_clicked;
+
 void menu_driver (struct menu *menu, const enum menu_request req)
 {
 	assert (menu != NULL);
 
 	if (menu->nitems == 0)
 		return;
-
-	if (req == REQ_DOWN && menu->selected->next) {
+	if (req == REQ_GOTO && last_mouse_clicked && last_mouse_event.y > 0 && last_mouse_event.y < menu->height + 1) {
+		struct menu_item *new = get_item_relative(menu->top, last_mouse_event.y - 1);
+		menu->selected = new;
+		if (last_mouse_event.bstate &  BUTTON1_DOUBLE_CLICKED) {
+			go_file();
+		}
+	}
+	else if (req == REQ_DOWN && menu->selected->next) {
 		menu->selected = menu->selected->next;
 		if (menu->selected->num >= menu->top->num + menu->height) {
 			menu->top = get_item_relative (menu->selected,

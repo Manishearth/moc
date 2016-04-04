@@ -56,6 +56,14 @@ struct command
 /* Array of commands - each element is a list of keys for this command. */
 static struct command commands[] = {
 	{
+		KEY_CMD_MENU_GOTO,
+		"menu_goto_click",
+		"Move to mouse position in menu",
+		CON_MENU,
+		{ KEY_MOUSE, -1 },
+		1
+	},
+	{
 		KEY_CMD_QUIT_CLIENT,
 		"quit_client",
 		"Detach MOC from the server",
