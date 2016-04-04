@@ -214,6 +214,13 @@ struct queued_message
 	void *data;
 };
 
+
+// mouse stuff
+
+MEVENT last_mouse_event;
+bool last_mouse_clicked = false;
+
+
 static struct info_win
 {
 	WINDOW *win;
@@ -1316,6 +1323,9 @@ static void side_menu_cmd (struct side_menu *m, const enum key_cmd cmd)
 	if (m->type == MENU_DIR || m->type == MENU_PLAYLIST
 			|| m->type == MENU_THEMES) {
 		switch (cmd) {
+			case KEY_CMD_MENU_GOTO:
+				menu_driver (m->menu.list.main, REQ_GOTO);
+				break;
 			case KEY_CMD_MENU_DOWN:
 				menu_driver (m->menu.list.main, REQ_DOWN);
 				break;
@@ -1939,11 +1949,37 @@ static void main_win_create_themes_menu (struct main_win *w)
 	side_menu_set_title (&w->menus[2], "Themes");
 }
 
+static bool contains(struct side_menu* m) {
+	return last_mouse_event.x > m->posx 
+		   && last_mouse_event.x < m->posx + m->width
+		   && last_mouse_event.y < m->posy + m->height
+		   && last_mouse_event.y > m->posy;
+}
+
 static void main_win_menu_cmd (struct main_win *w, const enum key_cmd cmd)
 {
 	assert (w != NULL);
+	struct side_menu* current = &w->menus[w->selected_menu];
+	if (cmd == KEY_CMD_MENU_GOTO && last_mouse_clicked) {
+		if (!contains(current)) {
+			// it's not within the clickable region of the current window,
+			// discard it
+			last_mouse_clicked = false;
+			int i;
+			for (i = 0; i < (int)ARRAY_SIZE(w->menus); i++) {
+				if (contains(&w->menus[i]) && w->menus[i].visible) {
+					if ((w->menus[i].type == MENU_DIR && current->type == MENU_PLAYLIST)
+					 || (w->menus[i].type == MENU_PLAYLIST && current->type == MENU_DIR) ) {
+						last_mouse_clicked = true;
+						toggle_menu();
+						current = &w->menus[w->selected_menu];
+					}
+				}
+			}
+		}
+	}
 
-	side_menu_cmd (&w->menus[w->selected_menu], cmd);
+	side_menu_cmd (current, cmd);
 	main_win_draw (w);
 }
 
@@ -3830,6 +3866,7 @@ void iface_set_title (const enum iface_menu menu, const char *title)
 void iface_get_key (struct iface_key *k)
 {
 	wint_t ch;
+	last_mouse_clicked = false;
 
 	if ((ch = wgetch(main_win.win)) == (wint_t)ERR)
 		interface_fatal ("wgetch() failed!");
@@ -3866,6 +3903,13 @@ void iface_get_key (struct iface_key *k)
 		}
 	}
 	else {
+		if (ch == KEY_MOUSE) {
+			if (getmouse(&last_mouse_event) == OK) {
+				if(last_mouse_event.bstate & BUTTON1_CLICKED || last_mouse_event.bstate &  BUTTON1_DOUBLE_CLICKED ) {
+					last_mouse_clicked = true;
+				}
+			}
+		}
 		k->type = IFACE_KEY_FUNCTION;
 		k->key.func = ch;
 	}

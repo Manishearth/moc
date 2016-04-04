@@ -1336,7 +1336,7 @@ static void change_srv_plist_serial ()
 static void enter_first_dir ();
 
 /* Switch between the directory view and the playlist. */
-static void toggle_menu ()
+void toggle_menu ()
 {
 	int num;
 
@@ -1681,7 +1681,7 @@ static void play_it (const char *file)
 }
 
 /* Action when the user selected a file. */
-static void go_file ()
+void go_file ()
 {
 	enum file_type type = iface_curritem_get_type ();
 	char *file = iface_get_curr_file ();
@@ -3078,6 +3078,7 @@ static void menu_key (const struct iface_key *k)
 			case KEY_CMD_GO:
 				go_file ();
 				break;
+			case KEY_CMD_MENU_GOTO:
 			case KEY_CMD_MENU_DOWN:
 			case KEY_CMD_MENU_UP:
 			case KEY_CMD_MENU_NPAGE:
@@ -3505,6 +3506,7 @@ void init_interface (const int sock, const int logging, lists_t_strs *args)
 
 void interface_loop ()
 {
+	mousemask( BUTTON1_CLICKED | BUTTON1_DOUBLE_CLICKED  , NULL);
 	while (want_quit == NO_QUIT) {
 		fd_set fds;
 		int ret;
@@ -3551,6 +3553,7 @@ void interface_loop ()
 		if (!want_quit)
 			update_mixer_value ();
 	}
+	mousemask(0, NULL);
 }
 
 /* Save the current directory path to a file. */

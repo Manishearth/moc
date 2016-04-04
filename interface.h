@@ -59,6 +59,9 @@ void interface_cmdline_set (int server_sock, char *arg, const int val);
 void interface_cmdline_formatted_info (const int server_sock, const char *format_str);
 void interface_cmdline_enqueue (int server_sock, struct lists_s_strs *args);
 
+void go_file();
+void toggle_menu();
+
 #ifdef __cplusplus
 }
 #endif
